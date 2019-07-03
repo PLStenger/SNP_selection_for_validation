@@ -5,8 +5,14 @@ ex:
 ```
 scaffold29|size405917_22946	G	A	22946	>scaffold29|size405917	AAAAAACAAAACAAAACAAAACAAAACAAAAAATCCCAAAAAATCAAGGGACTCTCAACTACAGTAAAACTTTCATTTCGATTGTTCCTTTTATGCAAAACTCTTGTACTATAAGCCTGGAATACCAAGTGAGTAATAAATGGAAATAAAGAACTACCTATCCACGAAATTGGCCACCAATAATGCAGTTACTCCTTTTGTTGCTGACCAGAGAAGGCAAAGTGTGTCGTTTTTCCAATGTCTCCCTGACAATGGATCCGCAAATCCACCCCAAACATCGATAAGAAGTTCTCCTTTAT[G/A]ATAGAATGCCACACTGGTTCCACGTTCTTCTCCATTTTCTACATGTTTTCTACAAAATCAAATTTCAAGAGACGTACAATTAGCATGATCAAGGAACATAAAATGAAAGAAAGTTTGTTGCTTATTACCTTCAAATCTTTTGCCATTATGCATGTATGATTCATTCCTCGGAGACATTGTGTAGAGGTATAACTGACAAATGAGCGTGGACAAAAACAGAAAGGAGATACATATTGTAACGACATCGTCCCAGCTTGTGAAACTGGGAAGGTATTACTCGGAAAGGGGTAGGGGTGGATA
 ```
+Zoom in the middel of the sequence:
+
+```
+TTTAT[G/A]ATAGA
+```
+
 Here there is the SNP name, the reference base, the alternative base, the position of the SNP, the orginal sequence name, the "special sequence".
-The "special sequence" here is a portion of the original genomic sequence, with 300 bp before AND after the SNP (so 600 pb), and at the middle of the sequence, there is the SNP with this format: [G/A] ([ref/alt])
+The "special sequence" here is a portion of the original genomic sequence, with 300 bp before AND after the SNP (so 600 pb), and at the middle of the sequence, there is the SNP with this format: [G/A] ([ref/alt]). This format will be usefull for the primers design later.
 
 ## Create a database of your sequences 
 Fasta format is boring to deal with. It's better to have one line per sequence with 2 columns: $1= name of the sequence; $2= sequence.
@@ -69,6 +75,10 @@ scaffold745|size619512_342	A	G	342	>scaffold507|size519548	CCCTTGCCAATTTTGTGGGGT
 
 ## Extract necesssary info
 
+The code below will work only for the first line of your file (e.g. your first SNP). This is for explanation, for all SNPs, see the code in the next section.
+
+This will create files for all variables in order to extarct them and put them in a code (last line). The last line permit to extract from your whole genomic sequence 300pb before the SNP, put a `[`, the reference base, a slash (`/`), the alternative base, a `]`, and then the next 300 pb. The before last line print the name of SNP and a `  YYYYYYY`. Later, change `  YYYYYYY/n` by tabulation (`\t`) to clean your file.
+
 ```
 # SNP_name
 awk '{print $1}' test.txt > SNP_name_2.txt
@@ -98,6 +108,55 @@ SNP_ALTERNIF=$(head -n 1 SNP_alternatif_3.txt)
 # Print 300 pb before SNP and 300pb after SNP
 # varibale : where I start : How many I print
 # So, VAR : 300 - position SNP : 600
-echo "$SNP_NAME XXXXXX" >> result.txt
+echo "$SNP_NAME YYYYYYY" >> result.txt
 echo ${SEQUENCE:POSITION-300:299}[${SEQUENCE:POSITION-1:1}/$SNP_ALTERNIF]${SEQUENCE:POSITION:300} >> result.txt
 ```
+
+## Extract info for all your SNP.
+
+You will create many duplication of the code below, one per SNP line. The portion line `sed '1q;d'` of the code bellow precise "extract the first line of my file". So if you put `sed '2q;d'`, this will extract only the second line.
+So the idea is to create a loop than will create N code for your N SNP by change changing the `sed 'Nq;d'` part.
+
+```
+#!/usr/bin/env bash
+
+echo "#!/usr/bin/env bash" >> lunch_loop.sh
+
+for i in `seq 1 128`; do 
+
+echo "# SNP_name" >> lunch_loop.sh ;
+echo "awk XXXXX{print DOLLAR1}XXXXX test.txt > SNP_name_2.txt" >> lunch_loop.sh ;
+echo "sed XXXXX$i ZZZZZZq;dXXXXX SNP_name_2.txt > SNP_name_3.txt" >> lunch_loop.sh 
+
+echo "# SNP_alternatif" >> lunch_loop.sh
+echo "awk XXXXX{print DOLLAR3}XXXXX test.txt > SNP_alternatif_2.txt" >> lunch_loop.sh
+echo "sed XXXXX$i ZZZZZZq;dXXXXX SNP_alternatif_2.txt > SNP_alternatif_3.txt" >> lunch_loop.sh
+
+echo "# sequence" >> lunch_loop.sh
+echo "awk XXXXX{print DOLLAR6}XXXXX test.txt > sequence_2.txt" >> lunch_loop.sh
+echo "sed XXXXX$i ZZZZZZq;dXXXXX sequence_2.txt > sequence_3.txt" >> lunch_loop.sh
+
+echo "# position" >> lunch_loop.sh
+echo "awk XXXXX{print DOLLAR4}XXXXX test.txt > position_2.txt" >> lunch_loop.sh
+echo "sed XXXXX$i ZZZZZZq;dXXXXX position_2.txt > position_3.txt" >> lunch_loop.sh
+
+echo 'SEQUENCE=DOLLAR(head -n 1 sequence_3.txt)' >> lunch_loop.sh
+echo 'POSITION=DOLLAR(head -n 1 position_3.txt)' >> lunch_loop.sh
+echo 'SNP_NAME=DOLLAR(head -n 1 SNP_name_3.txt)' >> lunch_loop.sh
+echo 'SNP_ALTERNIF=DOLLAR(head -n 1 SNP_alternatif_3.txt)' >> lunch_loop.sh
+
+echo 'echo XXXXXDOLLARSNP_NAME YYYYYYYXXXXX >> result2.txt' >> lunch_loop.sh
+echo "echo XXXXXDOLLAR{SEQUENCE:POSITION-300:299}[DOLLAR{SEQUENCE:POSITION-1:1}/DOLLARSNP_ALTERNIF]DOLLAR{SEQUENCE:POSITION:300}XXXXX >> result2.txt" >> lunch_loop.sh ; done
+```
+
+This script will create a `lunch_loop.sh` script for 128 SNPs (see `for i in ``seq 1 128``; do`  part).
+After running this script, you need to clean it. Change:
+- `XXXXX` by `'`
+- `DOLLAR` by `$`
+- ` ZZZZZZ` by nothing
+ 
+ You need to let YYYYYYY pattern for after (see above section for explanations).
+
+At the and, run the `lunch_loop.sh` script. Here, your input file (see section `Combine the database file with you SNP data`), need to be named `test.txt`, or change the name all over the scripts.
+
+This will create a `result2.txt` file with your datas like in the first example of this Wiki tuto.
