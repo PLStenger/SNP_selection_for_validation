@@ -1,6 +1,13 @@
 # SNP_selection_for_validation
 Useful code for prepare the file you need to send for SNP validation at a company
 
+ex:
+```
+scaffold29|size405917_22946	G	A	22946	>scaffold29|size405917	AAAAAACAAAACAAAACAAAACAAAACAAAAAATCCCAAAAAATCAAGGGACTCTCAACTACAGTAAAACTTTCATTTCGATTGTTCCTTTTATGCAAAACTCTTGTACTATAAGCCTGGAATACCAAGTGAGTAATAAATGGAAATAAAGAACTACCTATCCACGAAATTGGCCACCAATAATGCAGTTACTCCTTTTGTTGCTGACCAGAGAAGGCAAAGTGTGTCGTTTTTCCAATGTCTCCCTGACAATGGATCCGCAAATCCACCCCAAACATCGATAAGAAGTTCTCCTTTAT[G/A]ATAGAATGCCACACTGGTTCCACGTTCTTCTCCATTTTCTACATGTTTTCTACAAAATCAAATTTCAAGAGACGTACAATTAGCATGATCAAGGAACATAAAATGAAAGAAAGTTTGTTGCTTATTACCTTCAAATCTTTTGCCATTATGCATGTATGATTCATTCCTCGGAGACATTGTGTAGAGGTATAACTGACAAATGAGCGTGGACAAAAACAGAAAGGAGATACATATTGTAACGACATCGTCCCAGCTTGTGAAACTGGGAAGGTATTACTCGGAAAGGGGTAGGGGTGGATA
+```
+Here there is the SNP name, the reference base, the alternative base, the position of the SNP, the orginal sequence name, the "special sequence".
+The "special sequence" here is a portion of the original genomic sequence, with 300 bp before AND after the SNP (so 600 pb), and at the middle of the sequence, there is the SNP with this format: [G/A] ([ref/alt])
+
 ## Create a database of your sequences 
 Fasta format is boring to deal with. It's better to have one line per sequence with 2 columns: $1= name of the sequence; $2= sequence.
 
@@ -58,4 +65,39 @@ Create a file with `paste` and/or `awk` to combine your SNP data (SNP name, ref 
 scaffold507|size519548_340	C	G	340	>scaffold507|size519548	AATCCTTGAGTGCACATGTTAGGAAGATTTGGGTATCAA...
 scaffold745|size619512_342	A	G	342	>scaffold507|size519548	CCCTTGCCAATTTTGTGGGGTTTTTTTGTTTTTGATTTTTTTTTTGGCTGCGATTCCTCAACCCAGATGGCCGC...
 ...
+```
+
+## Extract necesssary info
+
+```
+# SNP_name
+awk '{print $1}' test.txt > SNP_name_2.txt
+sed '1q;d' SNP_name_2.txt > SNP_name_3.txt
+
+# SNP_alternatif
+awk '{print $3}' test.txt > SNP_alternatif_2.txt
+sed '1q;d' SNP_alternatif_2.txt > SNP_alternatif_3.txt
+
+# sequence
+awk '{print $6}' test.txt > sequence_2.txt
+sed '1q;d' sequence_2.txt > sequence_3.txt
+
+# position
+awk '{print $4}' test.txt > position_2.txt
+sed '1q;d' position_2.txt > position_3.txt
+
+#INPUT='someletters_12345_moreleters.ext'
+#SUBSTRING=$(echo $INPUT| cut -d'_' -f 2)
+#echo $SUBSTRING
+
+SEQUENCE=$(head -n 1 sequence_3.txt)
+POSITION=$(head -n 1 position_3.txt)
+SNP_NAME=$(head -n 1 SNP_name_3.txt)
+SNP_ALTERNIF=$(head -n 1 SNP_alternatif_3.txt)
+
+# Print 300 pb before SNP and 300pb after SNP
+# varibale : where I start : How many I print
+# So, VAR : 300 - position SNP : 600
+echo "$SNP_NAME XXXXXX" >> result.txt
+echo ${SEQUENCE:POSITION-300:299}[${SEQUENCE:POSITION-1:1}/$SNP_ALTERNIF]${SEQUENCE:POSITION:300} >> result.txt
 ```
