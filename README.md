@@ -49,3 +49,13 @@ rm sspace.final.scaffolds_database_awk_9.txt
 tr n '\n' < space.final.scaffolds_database_awk_10.txt > space.final.scaffolds_database.txt
 rm sspace.final.scaffolds_database_awk_10.txt 
 ```
+
+## Combine the database file with you SNP data
+
+Create a file with `paste` and/or `awk` to combine your SNP data (SNP name, ref base, alt base, position, transcrit name) with you sequence database file (transcrit (or sequence) name, sequence), in order to have a file with 6 columns in this order, with one line by SNP:
+
+```
+scaffold507|size519548_340	C	G	340	>scaffold507|size519548	AATCCTTGAGTGCACATGTTAGGAAGATTTGGGTATCAA...
+scaffold745|size619512_342	A	G	342	>scaffold507|size519548	CCCTTGCCAATTTTGTGGGGTTTTTTTGTTTTTGATTTTTTTTTTGGCTGCGATTCCTCAACCCAGATGGCCGC...
+...
+```
