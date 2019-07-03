@@ -14,6 +14,9 @@ TTTAT[G/A]ATAGA
 Here there is the SNP name, the reference base, the alternative base, the position of the SNP, the orginal sequence name, the "special sequence".
 The "special sequence" here is a portion of the original genomic sequence, with 300 bp before AND after the SNP (so 600 pb), and at the middle of the sequence, there is the SNP with this format: [G/A] ([ref/alt]). This format will be usefull for the primers design later.
 
+# WARNING:
+This code is like he is. This is not at all optimizing code (not at all !!). This is quick and dirty, but it do the job. I hope I will find time to make it better. 
+
 ## Create a database of your sequences 
 Fasta format is boring to deal with. It's better to have one line per sequence with 2 columns: $1= name of the sequence; $2= sequence.
 
@@ -63,7 +66,7 @@ tr n '\n' < space.final.scaffolds_database_awk_10.txt > space.final.scaffolds_da
 rm sspace.final.scaffolds_database_awk_10.txt 
 ```
 
-## Combine the database file with you SNP data
+## Combine the database file with you SNPs data
 
 Create a file with `paste` and/or `awk` to combine your SNP data (SNP name, ref base, alt base, position, transcrit name) with you sequence database file (transcrit (or sequence) name, sequence), in order to have a file with 6 columns in this order, with one line by SNP:
 
@@ -155,7 +158,7 @@ After running this script, you need to clean it. Change:
 - `DOLLAR` by `$`
 - ` ZZZZZZ` by nothing
  
- You need to let YYYYYYY pattern for after (see above section for explanations).
+ You need to let `YYYYYYY` pattern for after (see above section for explanations).
 
 At the and, run the `lunch_loop.sh` script. Here, your input file (see section `Combine the database file with you SNP data`), need to be named `test.txt`, or change the name all over the scripts.
 
